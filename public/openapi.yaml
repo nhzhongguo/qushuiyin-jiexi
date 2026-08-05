@@ -1,0 +1,178 @@
+openapi: 3.0.3
+info:
+  title: VideoSpider 解析服务 API
+  version: 2.0.0
+  description: |
+    短视频无水印解析服务（版本化 API）。
+    base 路径为 `/api/v1`，默认不开启鉴权；如需开启，请设置 `API_KEY_ENABLED=true` 与 `API_KEY`，
+    并携带 `X-API-Key: <key>` 或 `Authorization: Bearer <key>` 请求头。
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      summary: 健康检查（始终公开）
+      operationId: health
+      responses:
+        "200":
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+  /platforms:
+    get:
+      summary: 支持平台列表
+      operationId: listPlatforms
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: 平台 key 列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /parse:
+    get:
+      summary: 解析视频/图文链接
+      operationId: parse
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: 短视频分享链接或直链
+          schema:
+            type: string
+            example: https://v.douyin.com/xxxx/
+      responses:
+        "200":
+          description: 解析成功，返回视频信息
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParseResult"
+        "400":
+          description: URL 无效或暂不支持的平台
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          description: 解析失败或平台接口异常
+    post:
+      summary: 解析视频/图文链接（表单或 JSON body）
+      operationId: parsePost
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  example: https://www.bilibili.com/video/BV1xxxx
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+      responses:
+        "200":
+          description: 解析成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParseResult"
+        "400":
+          description: 参数错误
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          description: 解析失败
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  responses:
+    Unauthorized:
+      description: 缺少或无效的 API Key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: 请求过于频繁
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    MethodNotAllowed:
+      description: 不支持的请求方法
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          description: 返回数据，结构因接口而异
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+    ParseResult:
+      allOf:
+        - $ref: "#/components/schemas/Success"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                author:
+                  type: string
+                uid:
+                  type: [string, integer]
+                avatar:
+                  type: string
+                like:
+                  type: integer
+                time:
+                  type: integer
+                title:
+                  type: string
+                cover:
+                  type: string
+                url:
+                  type: string
+                  description: 无水印媒体直链
+                music:
+                  type: object
+                  description: 平台返回的音频信息（可选）

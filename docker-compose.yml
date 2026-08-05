@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=VideoSpider
+      - APP_DEBUG=false
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_MAX_REQUESTS=60
+      - RATE_LIMIT_TIME_WINDOW=60
+      - PARSE_CACHE_TTL=86400
+    volumes:
+      - ./storage:/app/storage
+    restart: unless-stopped

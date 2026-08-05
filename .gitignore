@@ -1,0 +1,6 @@
+/vendor/
+.env
+/storage/logs/*.log
+/storage/rate_limit/*.json
+/storage/cache/
+.DS_Store
