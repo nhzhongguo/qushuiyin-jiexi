@@ -1,4 +1,4 @@
-# 去水印解析 - 无水印短视频解析工具
+# Short Video No-Watermark Downloader
 
 > **去水印解析** 是一款面向网页端使用的短视频无水印解析工具。输入分享链接后，可快速获取视频信息和无水印媒体地址。
 
@@ -6,8 +6,8 @@
 
 ## 项目地址
 
-- GitHub：<https://github.com/yuchen0x1/qushuiyin-jiexi>
-- Gitee：<https://gitee.com/yuchen0x1/qushuiyin-jiexi>
+- GitHub：<https://github.com/yuchen0x1/short-video-no-watermark-downloader>
+- Gitee：<https://gitee.com/yuchen0x1/short-video-no-watermark-downloader>
 
 ## 项目来源与二次开发说明
 
@@ -64,7 +64,7 @@
    复制 `.env.example` 为 `.env`，然后按需修改：
 
    ```env
-   APP_NAME=VideoSpider
+   APP_NAME=Short Video No-Watermark Downloader
    APP_DEBUG=false
    APP_CORS_ALLOW_ORIGIN=*
 
@@ -172,7 +172,7 @@ curl -G "http://localhost:8000" \
 
 ### 平台接口失效怎么办？
 
-短视频平台的接口会不定期变更。如果解析失败，请先确认链接仍有效；若持续失败，可在 [Issues](https://github.com/yuchen0x1/qushuiyin-jiexi/issues) 反馈。
+短视频平台的接口会不定期变更。如果解析失败，请先确认链接仍有效；若持续失败，可在 [Issues](https://github.com/yuchen0x1/short-video-no-watermark-downloader/issues) 反馈。
 
 ## 免责声明
 

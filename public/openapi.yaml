@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: VideoSpider 解析服务 API
+  title: Short Video No-Watermark Downloader API
   version: 2.0.0
   description: |
     短视频无水印解析服务（版本化 API）。

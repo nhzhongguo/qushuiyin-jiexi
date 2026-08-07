@@ -11,7 +11,7 @@ Config::env('APP_NAME');
 return [
     // 应用基础配置
     'app' => [
-        'name' => Config::env('APP_NAME', 'VideoSpider'),
+        'name' => Config::env('APP_NAME', 'Short Video No-Watermark Downloader'),
         'debug' => Config::env('APP_DEBUG', 'false') === 'true',
         'cors_allow_origin' => Config::env('APP_CORS_ALLOW_ORIGIN', '*'),
         'env' => Config::env('APP_ENV', 'production'), // production, staging, local
