@@ -32,7 +32,6 @@ return [
     'rate_limit' => [
         'enabled' => Config::env('RATE_LIMIT_CACHE_ENABLED', 'true') !== 'false',
         'driver' => Config::env('RATE_LIMIT_CACHE_DRIVER', 'file'),
-        'prefix' => 'video_spider_ratelimit_',
         'file' => [
             'directory' => __DIR__ . '/../../storage/cache/rate_limit/',
         ],

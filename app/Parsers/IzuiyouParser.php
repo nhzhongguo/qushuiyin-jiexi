@@ -27,15 +27,24 @@ class IzuiyouParser extends BaseParser
 
         $result = self::fetch('https://share.xiaochuankeji.cn/planck/share/post/detail_h5', $postData);
 
+        if (!$result || empty($result['data'])) {
+            throw new \RuntimeException('视频数据获取失败');
+        }
+
         $data = self::parseJson($result['data']);
         if (!$data) {
             throw new \RuntimeException('视频数据解析失败');
         }
 
 
-        $item = $data['data']['post'];
-        $videoKey = array_keys($item['videos'] ?? [])[0] ?? null;
-        $videoUrl = $item['videos'][$videoKey]['url'];
+        $item = is_array($data) ? ($data['data']['post'] ?? null) : null;
+        if (!is_array($item) || empty($item['videos']) || !is_array($item['videos'])) {
+            throw new \RuntimeException('视频数据解析失败');
+        }
+        $videoKey = array_key_first($item['videos']);
+        $videoUrl = $videoKey !== null && isset($item['videos'][$videoKey]['url'])
+            ? $item['videos'][$videoKey]['url']
+            : '';
 
         if (!$videoUrl) {
             throw new \RuntimeException('未找到视频 URL');

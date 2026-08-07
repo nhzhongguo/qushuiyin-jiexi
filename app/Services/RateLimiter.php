@@ -8,7 +8,6 @@ use App\Utils\Config;
 use App\Utils\Logger;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\RateLimiter\Storage\CacheStorage;
-use Symfony\Contracts\Cache\CacheInterface;
 
 /**
  * API 速率限制服务
@@ -29,19 +28,13 @@ class RateLimiter
         $config = Config::get('cache.rate_limit', []);
         $enabled = $config['enabled'] ?? true;
         $driver = $config['driver'] ?? 'file';
-        $prefix = $config['prefix'] ?? 'video_spider_ratelimit_';
 
         // 创建存储
         $storage = null;
 
         if (!$enabled) {
             // 禁用时使用无限制的存储
-            $storage = new CacheStorage(new class implements CacheInterface {
-                public function get(string $key, callable $callback, ?float $beta = null, array &$metadata = null): mixed { return $callback(null); }
-                public function set(string $key, mixed $value, ?float $ttl = null): bool { return true; }
-                public function delete(string $key): bool { return true; }
-                public function clear(string $prefix = ''): bool { return true; }
-            }, $prefix);
+            $storage = new CacheStorage(new \Symfony\Component\Cache\Adapter\ArrayAdapter());
         } else {
             switch ($driver) {
                 case 'redis':
@@ -64,8 +57,7 @@ class RateLimiter
                         }
                         $redis->select($database);
                         $storage = new CacheStorage(
-                            new \Symfony\Component\Cache\Adapter\RedisAdapter($redis, '', 0),
-                            $prefix
+                            new \Symfony\Component\Cache\Adapter\RedisAdapter($redis, '', 0)
                         );
                     } catch (\Throwable $e) {
                         Logger::error('Redis 连接失败，回退到文件缓存', ['error' => $e->getMessage()]);
@@ -78,8 +70,7 @@ class RateLimiter
                     $fileConfig = $config['file'] ?? [];
                     $directory = $fileConfig['directory'] ?? __DIR__ . '/../../storage/cache/rate_limit/';
                     $storage = new CacheStorage(
-                        new \Symfony\Component\Cache\Adapter\FilesystemAdapter('', 0, $directory),
-                        $prefix
+                        new \Symfony\Component\Cache\Adapter\FilesystemAdapter('', 0, $directory)
                     );
                     break;
             }
@@ -88,8 +79,7 @@ class RateLimiter
                 $fileConfig = $config['file'] ?? [];
                 $directory = $fileConfig['directory'] ?? __DIR__ . '/../../storage/cache/rate_limit/';
                 $storage = new CacheStorage(
-                    new \Symfony\Component\Cache\Adapter\FilesystemAdapter('', 0, $directory),
-                    $prefix
+                    new \Symfony\Component\Cache\Adapter\FilesystemAdapter('', 0, $directory)
                 );
             }
         }
@@ -125,10 +115,9 @@ class RateLimiter
                 $config = Config::get('cache.rate_limit', []);
                 $enabled = $config['enabled'] ?? true;
                 $driver = $config['driver'] ?? 'file';
-                $prefix = $config['prefix'] ?? 'video_spider_ratelimit_';
                 
                 // 复用存储创建逻辑...
-                $storage = self::createStorage($enabled, $driver, $prefix, $config);
+                $storage = self::createStorage($enabled, $driver, $config);
                 $factory = new RateLimiterFactory([
                     'id' => 'api_limiter_custom',
                     'policy' => 'fixed_window',
@@ -146,6 +135,15 @@ class RateLimiter
                 'reset_time' => time() + $limitResult->getRetryAfter()->getTimestamp() - time(),
             ];
         } catch (\Throwable $e) {
+            if (!Config::get('rate_limit.fail_open', false)) {
+                Logger::error('速率限制检查失败，拒绝请求', ['ip' => $ip, 'error' => $e->getMessage()]);
+                return [
+                    'allowed' => false,
+                    'remaining' => 0,
+                    'reset_time' => time() + Config::get('rate_limit.time_window', 60),
+                ];
+            }
+
             Logger::error('速率限制检查失败，允许请求通过', ['ip' => $ip, 'error' => $e->getMessage()]);
             $configuredLimit = $limit ?? Config::get('rate_limit.max_requests', 60);
             return [
@@ -159,15 +157,10 @@ class RateLimiter
     /**
      * 创建存储实例
      */
-    private static function createStorage(bool $enabled, string $driver, string $prefix, array $config): CacheStorage
+    private static function createStorage(bool $enabled, string $driver, array $config): CacheStorage
     {
         if (!$enabled) {
-            return new CacheStorage(new class implements CacheInterface {
-                public function get(string $key, callable $callback, ?float $beta = null, array &$metadata = null): mixed { return $callback(null); }
-                public function set(string $key, mixed $value, ?float $ttl = null): bool { return true; }
-                public function delete(string $key): bool { return true; }
-                public function clear(string $prefix = ''): bool { return true; }
-            }, $prefix);
+            return new CacheStorage(new \Symfony\Component\Cache\Adapter\ArrayAdapter());
         }
 
         switch ($driver) {
@@ -185,8 +178,7 @@ class RateLimiter
                     }
                     $redis->select($redisConfig['database'] ?? 0);
                     return new CacheStorage(
-                        new \Symfony\Component\Cache\Adapter\RedisAdapter($redis, '', 0),
-                        $prefix
+                        new \Symfony\Component\Cache\Adapter\RedisAdapter($redis, '', 0)
                     );
                 } catch (\Throwable $e) {
                     Logger::error('Redis 连接失败，回退到文件缓存', ['error' => $e->getMessage()]);
@@ -198,8 +190,7 @@ class RateLimiter
                 $fileConfig = $config['file'] ?? [];
                 $directory = $fileConfig['directory'] ?? __DIR__ . '/../../storage/cache/rate_limit/';
                 return new CacheStorage(
-                    new \Symfony\Component\Cache\Adapter\FilesystemAdapter('', 0, $directory),
-                    $prefix
+                    new \Symfony\Component\Cache\Adapter\FilesystemAdapter('', 0, $directory)
                 );
         }
     }
@@ -243,4 +234,3 @@ class RateLimiter
         return 0;
     }
 }
-

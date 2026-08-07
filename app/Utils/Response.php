@@ -20,6 +20,7 @@ class Response
     {
         http_response_code($httpCode);
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
         
         $response = [
             'success' => true,
@@ -46,6 +47,7 @@ class Response
     {
         http_response_code($httpCode);
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
         
         $response = [
             'success' => false,

@@ -1,6 +1,8 @@
 /vendor/
 .env
 /storage/logs/*.log
+/storage/*.log
 /storage/rate_limit/*.json
 /storage/cache/
 .DS_Store
+.phpunit.cache/

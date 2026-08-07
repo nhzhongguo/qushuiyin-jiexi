@@ -1,6 +1,10 @@
 <?php
 
 $root = dirname(__DIR__);
+if (!chdir($root)) {
+    fwrite(STDERR, '无法切换到项目根目录: ' . $root . PHP_EOL);
+    exit(1);
+}
 $directories = ['app', 'config', 'public'];
 $files = [];
 
@@ -28,8 +32,7 @@ $phpBinary = 'php';
 if (PHP_OS_FAMILY === 'Windows') {
     // Try to find PHP in common locations
     $possiblePaths = [
-        getenv('PHP_BINARY'),
-        'C:/Users/冷漠不是神/AppData/Local/Microsoft/WinGet/Packages/PHP.PHP.8.1_Microsoft.Winget.Source_8wekyb3d8bbwe/php.exe',
+        PHP_BINARY,
         'C:/php/php.exe',
         'C:/Program Files/PHP/php.exe',
     ];
@@ -43,12 +46,30 @@ if (PHP_OS_FAMILY === 'Windows') {
 
 $failed = false;
 foreach ($files as $file) {
-    exec($phpBinary . ' -l ' . escapeshellarg($file) . ' 2>&1', $output, $exitCode);
+    $output = [];
+    $exitCode = 1;
+    $lintPath = ltrim(substr($file, strlen($root)), '\\/');
+    $process = proc_open([$phpBinary, '-l', $lintPath], [
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ], $pipes);
+    if (is_resource($process)) {
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+        $output = array_filter(array_merge(
+            explode(PHP_EOL, trim((string) $stdout)),
+            explode(PHP_EOL, trim((string) $stderr))
+        ));
+    } else {
+        $output[] = '无法启动 PHP 语法检查: ' . $file;
+    }
     echo implode(PHP_EOL, $output), PHP_EOL;
     if ($exitCode !== 0) {
         $failed = true;
     }
-    $output = [];
 }
 
 exit($failed ? 1 : 0);

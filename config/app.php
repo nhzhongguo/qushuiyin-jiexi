@@ -23,6 +23,7 @@ return [
         'max_requests' => (int)Config::env('RATE_LIMIT_MAX_REQUESTS', 60),
         'time_window' => (int)Config::env('RATE_LIMIT_TIME_WINDOW', 60),
         'trust_proxy_headers' => Config::env('RATE_LIMIT_TRUST_PROXY_HEADERS', 'false') === 'true',
+        'fail_open' => Config::env('RATE_LIMIT_FAIL_OPEN', 'false') === 'true',
     ],
 
     // API Key 鉴权（可选开启）

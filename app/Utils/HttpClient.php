@@ -175,15 +175,76 @@ class HttpClient
         
         // 解析 Location 头
         if ($httpCode >= 300 && $httpCode < 400 && preg_match('/Location:\s*(.*?)\r?\n/i', $response, $matches)) {
-            $location = trim($matches[1]);
-            // 处理相对路径
-            if (strpos($location, 'http') !== 0) {
-                $parsed = parse_url($url);
-                $location = ($parsed['scheme'] ?? 'http') . '://' . $parsed['host'] . $location;
-            }
-            return $location;
+            return self::resolveLocation($url, trim($matches[1]));
         }
         
         return $httpCode === 200 ? $url : false;
+    }
+
+    /**
+     * 解析相对重定向地址
+     *
+     * @param string $base 原始请求 URL
+     * @param string $location Location 头值
+     * @return string|false 解析后的绝对 URL，失败返回 false
+     */
+    private static function resolveLocation(string $base, string $location): string|false
+    {
+        if (preg_match('/^([a-zA-Z][a-zA-Z0-9+.-]*):/', $location, $schemeMatch)) {
+            return in_array(strtolower($schemeMatch[1]), ['http', 'https'], true) ? $location : false;
+        }
+
+        $parsed = parse_url($base);
+        if ($parsed === false || empty($parsed['scheme']) || empty($parsed['host'])) {
+            return false;
+        }
+
+        if (strpos($location, '//') === 0) {
+            return $parsed['scheme'] . ':' . $location;
+        }
+
+        $path = $location;
+        $suffix = '';
+        $queryPos = strpos($location, '?');
+        $fragmentPos = strpos($location, '#');
+        if ($queryPos !== false && ($fragmentPos === false || $queryPos < $fragmentPos)) {
+            $suffix = substr($location, $queryPos);
+            $path = substr($location, 0, $queryPos);
+        } elseif ($fragmentPos !== false) {
+            $suffix = substr($location, $fragmentPos);
+            $path = substr($location, 0, $fragmentPos);
+        }
+
+        if ($path === '') {
+            $path = $parsed['path'] ?? '/';
+        } elseif ($path[0] !== '/') {
+            $basePath = $parsed['path'] ?? '/';
+            $path = rtrim(substr($basePath, 0, (int) strrpos($basePath, '/')), '/') . '/' . $path;
+        }
+
+        $trailingSlash = substr($path, -1) === '/';
+        $segments = [];
+        foreach (explode('/', $path) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                array_pop($segments);
+                continue;
+            }
+            $segments[] = $segment;
+        }
+
+        $normalized = '/' . implode('/', $segments);
+        if ($trailingSlash && $normalized !== '/') {
+            $normalized .= '/';
+        }
+
+        $authority = $parsed['host'];
+        if (isset($parsed['port'])) {
+            $authority .= ':' . $parsed['port'];
+        }
+
+        return $parsed['scheme'] . '://' . $authority . $normalized . $suffix;
     }
 }

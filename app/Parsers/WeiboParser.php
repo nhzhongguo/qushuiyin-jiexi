@@ -37,9 +37,13 @@ class WeiboParser extends BaseParser
         
         $result = self::fetch("https://weibo.com/tv/api/component?page=/tv/show/{$cid}", $postData);
 
+        if (!$result || empty($result['data'])) {
+            throw new \RuntimeException('视频数据获取失败');
+        }
+
         $data = self::parseJson($result['data']);
-        $item = $data['data']['Component_Play_Playinfo'] ?? null;
-        if (!$item || empty($item['urls'])) {
+        $item = is_array($data) ? ($data['data']['Component_Play_Playinfo'] ?? null) : null;
+        if (!is_array($item) || empty($item['urls'])) {
             throw new \RuntimeException('视频数据解析失败');
         }
 

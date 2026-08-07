@@ -28,16 +28,24 @@ class PipigxParser extends BaseParser
 
         $result = self::fetch('https://share.ippzone.com/ppapi/share/fetch_content', $postData);
 
+        if (!$result || empty($result['data'])) {
+            throw new \RuntimeException('视频数据获取失败');
+        }
+
         $data = self::parseJson($result['data']);
 
         if (empty($data) || ($data['ret'] ?? 0) != 1) {
             throw new \RuntimeException('视频数据解析失败');
         }
 
-        $item = $data['data']['post'] ?? null;
-        $imgId = $item['imgs'][0]['id'] ?? null;
-
-        $videoUrl = $item['videos'][$imgId]['url'];
+        $item = is_array($data) ? ($data['data']['post'] ?? null) : null;
+        $imgId = is_array($item) ? ($item['imgs'][0]['id'] ?? null) : null;
+        if (!is_array($item) || !is_array($item['videos'] ?? null)) {
+            throw new \RuntimeException('视频数据解析失败');
+        }
+        $videoUrl = $imgId !== null && isset($item['videos'][$imgId]['url'])
+            ? $item['videos'][$imgId]['url']
+            : '';
         if (!$videoUrl) {
             throw new \RuntimeException('未找到视频 URL');
         }

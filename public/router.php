@@ -12,9 +12,18 @@ declare(strict_types=1);
  */
 
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/');
-$file = __DIR__ . $uri;
 
-if ($uri !== '/' && file_exists($file) && is_file($file)) {
+if (str_contains($uri, "\0") || str_contains($uri, '\\') || preg_match('/(^|\/)\.\.(\/|$)/', $uri)) {
+    http_response_code(400);
+    exit;
+}
+
+$file = realpath(__DIR__ . $uri);
+$publicDir = realpath(__DIR__);
+
+if ($uri !== '/' && $file !== false && $publicDir !== false
+    && str_starts_with($file, $publicDir . DIRECTORY_SEPARATOR)
+    && is_file($file)) {
     return false;
 }
 

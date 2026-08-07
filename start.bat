@@ -7,4 +7,4 @@ set SCRIPT_DIR=%~dp0
 start /B node "%SCRIPT_DIR%scripts\a_bogus_server.js"
 echo a_bogus server started on port %A_BOGUS_PORT%
 
-php -S localhost:8000 -t "%SCRIPT_DIR%public"
+php -S localhost:8000 -t "%SCRIPT_DIR%public" "%SCRIPT_DIR%public\router.php"

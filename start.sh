@@ -10,4 +10,4 @@ echo "a_bogus server started (PID: $A_BOGUS_PID, port: $A_BOGUS_PORT)"
 # Trap to clean up on exit
 trap "kill $A_BOGUS_PID 2>/dev/null; exit" INT TERM EXIT
 
-php -S localhost:8000 -t "$SCRIPT_DIR/public"
+php -S localhost:8000 -t "$SCRIPT_DIR/public" "$SCRIPT_DIR/public/router.php"
