@@ -4,6 +4,11 @@
 
 本项目是在开源项目基础上的二次开发版本，当前产品名称、网页界面和功能实现已按本项目需求重新整理。
 
+## 项目地址
+
+- GitHub：<https://github.com/yuchen0x1/qushuiyin-jiexi>
+- Gitee：<https://gitee.com/yuchen0x1/qushuiyin-jiexi>
+
 ## 项目来源与二次开发说明
 
 - 原项目：[`5ime/video_spider`](https://github.com/5ime/video_spider)
@@ -167,7 +172,7 @@ curl -G "http://localhost:8000" \
 
 ### 平台接口失效怎么办？
 
-短视频平台的接口会不定期变更。如果解析失败，请先确认链接仍有效；若持续失败，可在 [Issues](https://github.com/5ime/video_spider/issues) 反馈。
+短视频平台的接口会不定期变更。如果解析失败，请先确认链接仍有效；若持续失败，可在 [Issues](https://github.com/yuchen0x1/qushuiyin-jiexi/issues) 反馈。
 
 ## 免责声明
 

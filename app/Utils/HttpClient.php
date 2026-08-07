@@ -39,7 +39,7 @@ class HttpClient
                 CURLOPT_AUTOREFERER => true,
                 CURLOPT_MAXREDIRS => 10,
                 CURLOPT_ENCODING => '',
-                CURLOPT_USERAGENT => 'VideoSpider/2.0 (+https://github.com/5ime/video_spider)',
+                CURLOPT_USERAGENT => 'VideoSpider/2.0 (+https://github.com/yuchen0x1/qushuiyin-jiexi)',
             ], self::getSslOptions()));
 
             if ($responseHeaders !== null) {
